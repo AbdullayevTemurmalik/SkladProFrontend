@@ -45,6 +45,11 @@ export default function Admin() {
     JSON.parse(localStorage.getItem("offline_queue") || "[]"),
   );
 
+  // --- Bulk Upload States ---
+  const [bulkRegion, setBulkRegion] = useState("");
+  const [bulkWarehouseId, setBulkWarehouseId] = useState("");
+  const [bulkFormWarehouses, setBulkFormWarehouses] = useState([]);
+
   // Yangi tovar formasi
   const initialForm = {
     name: "",
@@ -101,6 +106,17 @@ export default function Admin() {
     };
   }, [offlineQueue]);
 
+  const handleBulkRegionChange = (e) => {
+    const rId = e.target.value;
+    setBulkRegion(rId);
+    setBulkWarehouseId("");
+    if (rId) {
+      setBulkFormWarehouses(warehouses.filter((w) => w.regionId == rId));
+    } else {
+      setBulkFormWarehouses([]);
+    }
+  };
+
   const syncOfflineData = async () => {
     const queue = JSON.parse(localStorage.getItem("offline_queue") || "[]");
     if (queue.length === 0) return;
@@ -112,7 +128,7 @@ export default function Admin() {
     for (let p of queue) {
       try {
         if (p.type === 'bulk') {
-          await api.post('/products/bulk-upload', { csvData: p.csvData });
+          await api.post('/products/bulk-upload', { csvData: p.csvData, warehouseId: p.warehouseId });
         } else {
           await api.post("/products", p);
         }
@@ -279,35 +295,66 @@ export default function Admin() {
     const file = e.target.files[0];
     if (!file) return;
 
+    if (!bulkWarehouseId) {
+      setErrorModal("Iltimos, Excel yuklashdan oldin Ombor (Sklad)ni tanlang!");
+      e.target.value = "";
+      return;
+    }
+
+    showToast("Fayl o'qilmoqda...");
+
     const reader = new FileReader();
     reader.onload = async (event) => {
-      const text = event.target.result;
+      let text = event.target.result;
 
-      if (!isOnline) {
-        const newQueue = [...offlineQueue, { type: 'bulk', csvData: text }];
-        setOfflineQueue(newQueue);
-        localStorage.setItem("offline_queue", JSON.stringify(newQueue));
-        showToast("Internet yo'q! Fayl oflayn xotiraga saqlandi. Internet yonganda bazaga yuboriladi.");
-      } else {
-        showToast("Fayl serverga yuborilmoqda...");
-        try {
-          const res = await api.post('/products/bulk-upload', { csvData: text });
+      try {
+        if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+          if (!window.XLSX) {
+            showToast("Excel moduli yuklanmoqda... (Kutib turing)");
+            await new Promise((resolve, reject) => {
+              const script = document.createElement("script");
+              script.src = "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
+              script.onload = () => resolve();
+              script.onerror = () => reject(new Error("XLSX modulini yuklashda xatolik"));
+              document.head.appendChild(script);
+            });
+          }
+          const workbook = window.XLSX.read(text, { type: 'binary' });
+          const firstSheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheetName];
+          text = window.XLSX.utils.sheet_to_csv(worksheet);
+        }
+
+        if (!isOnline) {
+          const newQueue = [...offlineQueue, { type: 'bulk', csvData: text, warehouseId: bulkWarehouseId }];
+          setOfflineQueue(newQueue);
+          localStorage.setItem("offline_queue", JSON.stringify(newQueue));
+          showToast("Internet yo'q! Fayl oflayn xotiraga saqlandi. Internet yonganda bazaga yuboriladi.");
+        } else {
+          showToast("Fayl serverga yuborilmoqda...");
+          const res = await api.post('/products/bulk-upload', { csvData: text, warehouseId: bulkWarehouseId });
           fetchProducts();
           showToast(res.data.message || "Barcha mahsulotlar bazaga muvaffaqiyatli qo'shildi!");
-        } catch (err) {
-          if (err.message === 'Network Error' || err.code === 'ERR_NETWORK') {
-            const newQueue = [...offlineQueue, { type: 'bulk', csvData: text }];
-            setOfflineQueue(newQueue);
-            localStorage.setItem("offline_queue", JSON.stringify(newQueue));
-            showToast("Tarmoq xatosi! Fayl oflayn saqlandi, ulanish tiklanganda yuboriladi.");
-          } else {
-            console.error(err);
-            setErrorModal(err.response?.data?.error || "Faylni yuklashda xatolik yuz berdi");
-          }
+        }
+      } catch (err) {
+        if (err.message === 'Network Error' || err.code === 'ERR_NETWORK') {
+          const newQueue = [...offlineQueue, { type: 'bulk', csvData: text, warehouseId: bulkWarehouseId }];
+          setOfflineQueue(newQueue);
+          localStorage.setItem("offline_queue", JSON.stringify(newQueue));
+          showToast("Tarmoq xatosi! Fayl oflayn saqlandi, ulanish tiklanganda yuboriladi.");
+        } else {
+          console.error(err);
+          setErrorModal(err.response?.data?.error || err.message || "Faylni yuklashda xatolik yuz berdi");
         }
       }
     };
-    reader.readAsText(file);
+    
+    if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+      reader.readAsBinaryString(file);
+    } else {
+      reader.readAsText(file);
+    }
+    
     e.target.value = ""; // inputni tozalash
   };
 
@@ -359,24 +406,9 @@ export default function Admin() {
               </div>
             </div>
 
-            {/* CSV Yuklash tugmasi */}
-            <div className="mb-4 bg-blue-950/40 p-3 rounded-xl border border-blue-800/50 flex flex-col gap-2">
-              <label className="text-[10px] font-bold text-blue-300 uppercase tracking-wider">
-                Excel / CSV matni orqali yuklash
-              </label>
-              <input
-                type="file"
-                onChange={handleFileUpload}
-                className="text-xs text-blue-200 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-blue-600 file:text-white hover:file:bg-blue-500 cursor-pointer"
-              />
-              <p className="text-[9px] text-slate-400">
-                <b>Eslatma:</b> Exceldan nusxa olib <b>.txt</b> (yoki .csv) fayl yuklashingiz mumkin.
-                <br />
-                Sarlavhalar (Header) bo'lmasa ham dastur o'zi ketma-ketlikda aqlli o'qib oladi!
-              </p>
-            </div>
 
-            <form onSubmit={handleSubmit} className="space-y-3">
+
+            <form onSubmit={handleSubmit} className="space-y-3 mb-6">
               {/* Viloyat va Ombor bitta qatorda */}
               <div className="grid grid-cols-2 gap-3 bg-blue-950/40 p-3 rounded-xl border border-blue-800/50">
                 <div>
@@ -591,6 +623,54 @@ export default function Admin() {
                 Qo'shish
               </button>
             </form>
+
+            {/* Alohida Excel Yuklash qismi */}
+            <div className="bg-blue-950/40 p-4 rounded-xl border border-blue-500/30 mt-4">
+              <h3 className="text-sm font-bold text-white mb-3 flex items-center">
+                <Database className="w-4 h-4 mr-2 text-blue-400" />
+                Ommaviy yuklash (Excel)
+              </h3>
+              
+              <div className="grid grid-cols-2 gap-3 mb-3">
+                <div>
+                  <label className={labelStyle}>Viloyatni tanlang</label>
+                  <select
+                    value={bulkRegion}
+                    onChange={handleBulkRegionChange}
+                    className={inputStyle}
+                  >
+                    <option value="" className="text-black">Tanlang</option>
+                    {regions.map((r) => (
+                      <option key={r.id} value={r.id} className="text-black">{r.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className={labelStyle}>Omborni tanlang</label>
+                  <select
+                    value={bulkWarehouseId}
+                    onChange={(e) => setBulkWarehouseId(e.target.value)}
+                    className={inputStyle}
+                    disabled={!bulkRegion}
+                  >
+                    <option value="" className="text-black">{bulkRegion ? "Tanlang" : "Kutish..."}</option>
+                    {bulkFormWarehouses.map((w) => (
+                      <option key={w.id} value={w.id} className="text-black">{w.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <input
+                type="file"
+                onChange={handleFileUpload}
+                disabled={!bulkWarehouseId}
+                className={`w-full text-xs text-blue-200 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-blue-600 file:text-white ${!bulkWarehouseId ? 'opacity-50 cursor-not-allowed' : 'hover:file:bg-blue-500 cursor-pointer'}`}
+              />
+              <p className="text-[10px] text-slate-400 mt-2">
+                <b>1.</b> Skladni tanlang. <b>2.</b> Excel ma'lumotlarini yuklang. Sarlavhalar (Header) bo'lmasa ham dastur aqlli o'qib, o'sha skladga saqlaydi! Rasmlar local nomlari bilan (masalan: 1.jpg) yozilsa chiqadi.
+              </p>
+            </div>
           </div>
         </div>
 
@@ -620,7 +700,11 @@ export default function Admin() {
                     >
                       <td className="py-2.5 pl-2 pr-3 flex items-center gap-3">
                         <img
-                          src={p.image}
+                          src={
+                            p.image?.startsWith("http") || p.image?.startsWith("data:")
+                              ? p.image
+                              : `${api.defaults.baseURL.replace('/api', '')}/uploads/${p.image}`
+                          }
                           alt=""
                           className="w-10 h-10 rounded-lg object-contain bg-white/10 backdrop-blur-sm border border-blue-500/30 p-0.5"
                         />
