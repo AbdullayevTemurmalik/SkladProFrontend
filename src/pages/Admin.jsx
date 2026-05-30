@@ -72,23 +72,45 @@ export default function Admin() {
       navigate("/login");
       return;
     }
+    if (navigator.onLine) {
+      syncOfflineData();
+    }
     fetchProducts();
     api.get("/regions").then((res) => {
       setRegions(res.data);
+      localStorage.setItem("cached_regions", JSON.stringify(res.data));
       if (res.data.length) setFormRegion(res.data[0].id);
+    }).catch(() => {
+      const cached = JSON.parse(localStorage.getItem("cached_regions") || "[]");
+      setRegions(cached);
+      if (cached.length) setFormRegion(cached[0].id);
     });
+
     api.get("/categories").then((res) => {
       setCategories(res.data);
-      if (res.data.length)
-        setFormData((f) => ({ ...f, categoryId: res.data[0].id }));
+      localStorage.setItem("cached_categories", JSON.stringify(res.data));
+      if (res.data.length) setFormData((f) => ({ ...f, categoryId: res.data[0].id }));
+    }).catch(() => {
+      const cached = JSON.parse(localStorage.getItem("cached_categories") || "[]");
+      setCategories(cached);
+      if (cached.length) setFormData((f) => ({ ...f, categoryId: cached[0].id }));
     });
+
     api.get("/warehouses").then((res) => {
       setWarehouses(res.data);
+      localStorage.setItem("cached_warehouses", JSON.stringify(res.data));
+    }).catch(() => {
+      setWarehouses(JSON.parse(localStorage.getItem("cached_warehouses") || "[]"));
     });
+
     api.get("/units").then((res) => {
       setUnits(res.data);
-      if (res.data.length)
-        setFormData((f) => ({ ...f, unitId: res.data[0].id }));
+      localStorage.setItem("cached_units", JSON.stringify(res.data));
+      if (res.data.length) setFormData((f) => ({ ...f, unitId: res.data[0].id }));
+    }).catch(() => {
+      const cached = JSON.parse(localStorage.getItem("cached_units") || "[]");
+      setUnits(cached);
+      if (cached.length) setFormData((f) => ({ ...f, unitId: cached[0].id }));
     });
   }, [isAuthenticated, navigate]);
 
@@ -157,9 +179,13 @@ export default function Admin() {
   const fetchProducts = async () => {
     try {
       const res = await api.get("/products");
-      setProducts(res.data.reverse().slice(0, 50));
+      const fetchedData = res.data.reverse().slice(0, 50);
+      setProducts(fetchedData);
+      localStorage.setItem("cached_products", JSON.stringify(fetchedData));
     } catch (error) {
       console.error(error);
+      const cached = JSON.parse(localStorage.getItem("cached_products") || "[]");
+      setProducts(cached);
     }
   };
 
@@ -210,8 +236,14 @@ export default function Admin() {
         const newQueue = [...offlineQueue, payload];
         setOfflineQueue(newQueue);
         localStorage.setItem("offline_queue", JSON.stringify(newQueue));
+        
+        const fakeProduct = { ...payload, id: `offline-${Date.now()}` };
+        const newProducts = [fakeProduct, ...products].slice(0, 50);
+        setProducts(newProducts);
+        localStorage.setItem("cached_products", JSON.stringify(newProducts));
+
         showToast(
-          "Internet yo'q! Mahsulot oflayn xotiraga saqlandi. Internet yonganda bazaga yuboriladi.",
+          "Internet yo'q! Mahsulot oflayn saqlandi, UI da ko'rinadi va internet kelganda bazaga yuboriladi.",
         );
         setFormData({
           ...initialForm,
