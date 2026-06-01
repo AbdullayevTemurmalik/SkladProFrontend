@@ -32,6 +32,15 @@ export default function Admin() {
   const [categories, setCategories] = useState([]);
   const [warehouses, setWarehouses] = useState([]);
   const [units, setUnits] = useState([]);
+  
+  // Modallar uchun
+  const [deleteId, setDeleteId] = useState(null);
+  const [editProduct, setEditProduct] = useState(null);
+  const [errorModal, setErrorModal] = useState(null);
+
+  // Viloyat va Ombor filtratsiyasi uchun
+  const [formRegion, setFormRegion] = useState("");
+  const [editRegion, setEditRegion] = useState("");
   // Oflayn sinxronizatsiya uchun
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [offlineQueue, setOfflineQueue] = useState(() =>
