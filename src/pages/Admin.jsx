@@ -32,24 +32,6 @@ export default function Admin() {
   const [categories, setCategories] = useState([]);
   const [warehouses, setWarehouses] = useState([]);
   const [units, setUnits] = useState([]);
-  const [users, setUsers] = useState([]);
-  const [showUsersModal, setShowUsersModal] = useState(false);
-  const [revealedPasswords, setRevealedPasswords] = useState({});
-  const [isAdminUnlocked, setIsAdminUnlocked] = useState(false);
-  const [adminCodeInput, setAdminCodeInput] = useState("");
-  
-  const [passwordPromptUserId, setPasswordPromptUserId] = useState(null);
-  const [secretPasswordInput, setSecretPasswordInput] = useState("");
-
-  // Modallar uchun
-  const [deleteId, setDeleteId] = useState(null);
-  const [editProduct, setEditProduct] = useState(null);
-  const [errorModal, setErrorModal] = useState(null);
-
-  // Viloyat va Ombor filtratsiyasi uchun
-  const [formRegion, setFormRegion] = useState("");
-  const [editRegion, setEditRegion] = useState("");
-
   // Oflayn sinxronizatsiya uchun
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [offlineQueue, setOfflineQueue] = useState(() =>
@@ -416,47 +398,6 @@ export default function Admin() {
   const labelStyle =
     "block text-[10px] font-bold text-blue-300 uppercase tracking-wider mb-1 flex items-center";
 
-  if (!isAdminUnlocked) {
-    return (
-      <div className="min-h-screen bg-[#0b1736] flex flex-col items-center justify-center p-4 relative overflow-hidden font-sans">
-        <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
-          <div className="absolute -top-40 -right-40 w-96 h-96 bg-blue-600 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
-          <div className="absolute top-40 -left-20 w-72 h-72 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
-        </div>
-        <div className="z-10 bg-blue-900/30 backdrop-blur-xl border border-blue-800/50 p-8 rounded-[2rem] shadow-2xl max-w-sm w-full text-center">
-          <div className="w-20 h-20 bg-blue-500/20 text-blue-400 rounded-full flex items-center justify-center mx-auto mb-6">
-            <LayoutDashboard className="w-10 h-10" />
-          </div>
-          <h2 className="text-2xl font-black text-white mb-2">Admin Panel</h2>
-          <p className="text-blue-300 mb-8 text-sm font-bold">Maxfiy kodni kiriting</p>
-          <input
-            type="password"
-            value={adminCodeInput}
-            onChange={(e) => setAdminCodeInput(e.target.value)}
-            className="w-full text-center text-2xl tracking-[0.5em] px-4 py-4 bg-blue-950/60 border border-blue-800/50 rounded-xl text-white focus:ring-2 focus:ring-blue-400 outline-none mb-6"
-            placeholder="•••••"
-          />
-          <button
-            onClick={() => {
-              if (adminCodeInput === "12345") {
-                setIsAdminUnlocked(true);
-              } else {
-                setErrorModal("Admin kodi noto'g'ri!");
-                setAdminCodeInput("");
-              }
-            }}
-            className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg active:scale-95"
-          >
-            Kirish
-          </button>
-          <button onClick={() => navigate('/')} className="mt-4 text-blue-400 hover:text-white text-sm font-bold">
-            Orqaga qaytish
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-[#0b1736] flex flex-col font-sans pb-20 relative overflow-hidden">
       {/* Background nurlari */}
@@ -478,10 +419,7 @@ export default function Admin() {
               </h2>
               <div className="flex flex-col items-end gap-2">
                 <button 
-                  onClick={() => {
-                    setShowUsersModal(true);
-                    api.get('/users').then(res => setUsers(res.data)).catch(console.error);
-                  }}
+                  onClick={() => navigate('/users')}
                   className="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-md flex items-center"
                 >
                   <Users className="w-3.5 h-3.5 mr-1.5" /> Foydalanuvchilarni ko'rish
@@ -1105,94 +1043,6 @@ export default function Admin() {
         onConfirm={confirmDelete}
         onCancel={() => setDeleteId(null)}
       />
-      {showUsersModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-[#0b1736] border border-blue-800 rounded-3xl shadow-2xl max-w-lg w-full p-6 animate-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between mb-6 border-b border-blue-900 pb-4">
-              <h3 className="text-xl font-black text-white flex items-center">
-                <Users className="w-6 h-6 mr-2 text-blue-400" /> Tizimdagi Foydalanuvchilar
-              </h3>
-              <button
-                onClick={() => { setShowUsersModal(false); setRevealedPasswords({}); }}
-                className="text-slate-400 hover:text-white transition-colors bg-blue-900/40 p-2 rounded-xl"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="space-y-3 max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-blue-600">
-              {users.map((u) => (
-                <div key={u.id} className="bg-blue-950/50 p-4 rounded-2xl border border-blue-800/50 flex items-center justify-between">
-                  <div className="flex items-center">
-                    <div className="w-10 h-10 bg-indigo-500/20 text-indigo-400 rounded-full flex items-center justify-center font-bold mr-3">
-                      {u.username.charAt(0).toUpperCase()}
-                    </div>
-                    <div>
-                      <div className="text-white font-bold text-sm">{u.username}</div>
-                      <div className="text-blue-300 text-xs font-mono mt-0.5">Role: {u.role || 'USER'}</div>
-                    </div>
-                  </div>
-                  <div className="flex items-center bg-blue-900/30 px-3 py-1.5 rounded-xl border border-blue-800/30">
-                    <span className="text-blue-200 font-mono text-sm mr-3">
-                      {revealedPasswords[u.id] ? (u.password || 'Topilmadi') : '••••••••'}
-                    </span>
-                    <button
-                      onClick={() => {
-                        if (revealedPasswords[u.id]) {
-                          setRevealedPasswords({ ...revealedPasswords, [u.id]: false });
-                        } else {
-                          setPasswordPromptUserId(u.id);
-                          setSecretPasswordInput("");
-                        }
-                      }}
-                      className="text-blue-400 hover:text-indigo-400 transition"
-                    >
-                      {revealedPasswords[u.id] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                </div>
-              ))}
-              {users.length === 0 && <div className="text-center text-blue-300 py-4">Foydalanuvchilar topilmadi</div>}
-            </div>
-            
-            {passwordPromptUserId && (
-              <div className="absolute inset-0 bg-[#0b1736]/90 backdrop-blur-sm z-10 flex flex-col items-center justify-center p-6 rounded-3xl animate-in zoom-in-95 duration-200">
-                <h4 className="text-lg font-black text-white mb-2">Maxfiy Parol</h4>
-                <p className="text-sm text-blue-300 mb-6 text-center">Foydalanuvchi parolini ko'rish uchun ruxsat kodi kerak.</p>
-                <input
-                  type="password"
-                  value={secretPasswordInput}
-                  onChange={(e) => setSecretPasswordInput(e.target.value)}
-                  placeholder="••••••"
-                  className="w-full text-center tracking-widest px-4 py-3 bg-blue-950 border border-blue-800 rounded-xl text-white focus:ring-2 focus:ring-blue-500 mb-4 outline-none"
-                />
-                <div className="flex gap-3 w-full">
-                  <button
-                    onClick={() => setPasswordPromptUserId(null)}
-                    className="flex-1 bg-blue-900/50 hover:bg-blue-800 text-blue-300 font-bold py-2.5 rounded-xl transition-all"
-                  >
-                    Bekor qilish
-                  </button>
-                  <button
-                    onClick={() => {
-                      if (secretPasswordInput === "12345" || secretPasswordInput === "123456") {
-                        setRevealedPasswords({ ...revealedPasswords, [passwordPromptUserId]: true });
-                        setPasswordPromptUserId(null);
-                      } else {
-                        setErrorModal("Xato parol!");
-                        setSecretPasswordInput("");
-                      }
-                    }}
-                    className="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-xl transition-all"
-                  >
-                    Tasdiqlash
-                  </button>
-                </div>
-              </div>
-            )}
-            
-          </div>
-        </div>
-      )}
     </div>
   );
 }

@@ -6,6 +6,9 @@ const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    return localStorage.getItem('isAuthenticated') === 'true';
+  });
+  const [isAdmin, setIsAdmin] = useState(() => {
     return localStorage.getItem('isAdmin') === 'true';
   });
 
@@ -14,7 +17,11 @@ export const AuthProvider = ({ children }) => {
       const res = await api.post('/users/login', { username, password });
       if (res.data) {
         setIsAuthenticated(true);
-        localStorage.setItem('isAdmin', 'true');
+        localStorage.setItem('isAuthenticated', 'true');
+        if (username === 'admin') {
+          setIsAdmin(true);
+          localStorage.setItem('isAdmin', 'true');
+        }
         return true;
       }
       return false;
@@ -39,11 +46,13 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     setIsAuthenticated(false);
+    setIsAdmin(false);
+    localStorage.removeItem('isAuthenticated');
     localStorage.removeItem('isAdmin');
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, register, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, isAdmin, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );

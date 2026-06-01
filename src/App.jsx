@@ -6,6 +6,8 @@ import Login from './pages/Login';
 import Admin from './pages/Admin';
 import ProductDetails from './pages/ProductDetails';
 
+import UsersList from './pages/UsersList';
+
 function App() {
   return (
     <ToastProvider>
@@ -15,6 +17,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/users" element={<UsersList />} />
             <Route path="/product/:id" element={<ProductDetails />} />
           </Routes>
         </Router>
