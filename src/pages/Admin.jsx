@@ -17,6 +17,9 @@ import {
   X,
   MapPin,
   Home as HomeIcon,
+  Users,
+  Eye,
+  EyeOff
 } from "lucide-react";
 
 export default function Admin() {
@@ -29,6 +32,9 @@ export default function Admin() {
   const [categories, setCategories] = useState([]);
   const [warehouses, setWarehouses] = useState([]);
   const [units, setUnits] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [showUsersModal, setShowUsersModal] = useState(false);
+  const [revealedPasswords, setRevealedPasswords] = useState({});
 
   // Modallar uchun
   const [deleteId, setDeleteId] = useState(null);
@@ -424,7 +430,16 @@ export default function Admin() {
                 <PlusCircle className="w-5 h-5 mr-2 text-blue-400" /> Yangi
                 Mahsulot
               </h2>
-              <div className="flex flex-col items-end">
+              <div className="flex flex-col items-end gap-2">
+                <button 
+                  onClick={() => {
+                    setShowUsersModal(true);
+                    api.get('/users').then(res => setUsers(res.data)).catch(console.error);
+                  }}
+                  className="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-md flex items-center"
+                >
+                  <Users className="w-3.5 h-3.5 mr-1.5" /> Foydalanuvchilarni ko'rish
+                </button>
                 <span
                   className={`text-[10px] font-bold px-2 py-0.5 rounded flex items-center ${isOnline ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"}`}
                 >
@@ -1044,6 +1059,61 @@ export default function Admin() {
         onConfirm={confirmDelete}
         onCancel={() => setDeleteId(null)}
       />
+      {showUsersModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-[#0b1736] border border-blue-800 rounded-3xl shadow-2xl max-w-lg w-full p-6 animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between mb-6 border-b border-blue-900 pb-4">
+              <h3 className="text-xl font-black text-white flex items-center">
+                <Users className="w-6 h-6 mr-2 text-blue-400" /> Tizimdagi Foydalanuvchilar
+              </h3>
+              <button
+                onClick={() => { setShowUsersModal(false); setRevealedPasswords({}); }}
+                className="text-slate-400 hover:text-white transition-colors bg-blue-900/40 p-2 rounded-xl"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="space-y-3 max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-blue-600">
+              {users.map((u) => (
+                <div key={u.id} className="bg-blue-950/50 p-4 rounded-2xl border border-blue-800/50 flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="w-10 h-10 bg-indigo-500/20 text-indigo-400 rounded-full flex items-center justify-center font-bold mr-3">
+                      {u.username.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <div className="text-white font-bold text-sm">{u.username}</div>
+                      <div className="text-blue-300 text-xs font-mono mt-0.5">Role: {u.role || 'USER'}</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center bg-blue-900/30 px-3 py-1.5 rounded-xl border border-blue-800/30">
+                    <span className="text-blue-200 font-mono text-sm mr-3">
+                      {revealedPasswords[u.id] ? (u.password || 'Topilmadi') : '••••••••'}
+                    </span>
+                    <button
+                      onClick={() => {
+                        if (revealedPasswords[u.id]) {
+                          setRevealedPasswords({ ...revealedPasswords, [u.id]: false });
+                        } else {
+                          const pass = prompt("Maxfiy parolni kiriting:");
+                          if (pass === "123456") {
+                            setRevealedPasswords({ ...revealedPasswords, [u.id]: true });
+                          } else if (pass) {
+                            alert("Xato parol!");
+                          }
+                        }
+                      }}
+                      className="text-blue-400 hover:text-indigo-400 transition"
+                    >
+                      {revealedPasswords[u.id] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+              ))}
+              {users.length === 0 && <div className="text-center text-blue-300 py-4">Foydalanuvchilar topilmadi</div>}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

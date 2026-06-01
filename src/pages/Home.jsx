@@ -60,8 +60,17 @@ function CustomSelect({ options, value, onChange, placeholder, icon: Icon, disab
   );
 }
 
+import { useAuth } from '../contexts/AuthContext';
+
 export default function Home() {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/login');
+    }
+  }, [isAuthenticated, navigate]);
 
   const [regions, setRegions] = useState([]);
   const [allWarehouses, setAllWarehouses] = useState([]);

@@ -7,6 +7,7 @@ export default function Login() {
   const [isRegistering, setIsRegistering] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -19,11 +20,16 @@ export default function Login() {
     setSuccess('');
     
     if (isRegistering) {
+      if (password !== confirmPassword) {
+        setError('Parollar bir-biriga mos emas!');
+        return;
+      }
       const successReg = await register(username, password);
       if (successReg) {
         setSuccess('Muvaffaqiyatli ro\'yxatdan o\'tdingiz! Endi tizimga kiring.');
         setIsRegistering(false);
         setPassword('');
+        setConfirmPassword('');
       } else {
         setError('Ro\'yxatdan o\'tishda xatolik yuz berdi! Username band bo\'lishi mumkin.');
       }
@@ -116,6 +122,25 @@ export default function Login() {
               </button>
             </div>
           </div>
+
+          {isRegistering && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Parolni Tasdiqlang</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Lock className="h-5 w-5 text-slate-400" />
+                </div>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  className="block w-full pl-10 pr-10 py-3 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                  placeholder="•••••"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                />
+              </div>
+            </div>
+          )}
 
           <button
             type="submit"
