@@ -3,6 +3,7 @@ import api from '../services/api';
 import Navbar from '../components/Navbar';
 import { Search, MapPin, Home as HomeIcon, Package2, Filter, AlertCircle, ChevronDown, Tags, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 function CustomSelect({ options, value, onChange, placeholder, icon: Icon, disabled }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -60,11 +61,9 @@ function CustomSelect({ options, value, onChange, placeholder, icon: Icon, disab
   );
 }
 
-import { useAuth } from '../contexts/AuthContext';
-
 export default function Home() {
-  const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -120,12 +119,12 @@ export default function Home() {
     }
   }, [selectedRegion, allWarehouses]);
 
-  // Filtrlar (Viloyat, Sklad, Kategoriya) o'zgarganda avtomatik izlash!
+  // Filtrlar (Viloyat, Sklad, Kategoriya, Data) o'zgarganda avtomatik izlash!
   useEffect(() => {
     if (selectedRegion || selectedWarehouse || selectedCategory || hasSearched) {
       executeSearch();
     }
-  }, [selectedRegion, selectedWarehouse, selectedCategory]);
+  }, [selectedRegion, selectedWarehouse, selectedCategory, allProductsCountData, allWarehouses]);
 
   // Ism orqali qidirganda ham avtomatik izlash (Yozishni to'xtatgandan 500ms o'tib)
   useEffect(() => {
@@ -217,6 +216,8 @@ export default function Home() {
   const autocompleteResults = searchName.trim().length > 0 
     ? allProductsCountData.filter(p => p.name.toLowerCase().includes(searchName.toLowerCase())).slice(0, 8)
     : [];
+
+  if (!isAuthenticated) return null;
 
   return (
     <div className="min-h-screen bg-blue-50/50 flex flex-col font-sans">
