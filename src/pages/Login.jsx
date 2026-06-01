@@ -6,6 +6,10 @@ import { Eye, EyeOff, Lock, User, ArrowLeft, UserPlus } from 'lucide-react';
 export default function Login() {
   const [isRegistering, setIsRegistering] = useState(false);
   const [username, setUsername] = useState('');
+  const [firstname, setFirstname] = useState('');
+  const [lastname, setLastname] = useState('');
+  const [age, setAge] = useState('');
+  const [gender, setGender] = useState('erkak');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -24,19 +28,30 @@ export default function Login() {
         setError('Parollar bir-biriga mos emas!');
         return;
       }
-      const successReg = await register(username, password);
+      const successReg = await register({ 
+        username, 
+        password, 
+        firstname, 
+        lastname, 
+        age: parseInt(age) || null, 
+        gender 
+      });
       if (successReg) {
         setSuccess('Muvaffaqiyatli ro\'yxatdan o\'tdingiz! Endi tizimga kiring.');
         setIsRegistering(false);
         setPassword('');
         setConfirmPassword('');
+        setFirstname('');
+        setLastname('');
+        setAge('');
+        setGender('erkak');
       } else {
         setError('Ro\'yxatdan o\'tishda xatolik yuz berdi! Username band bo\'lishi mumkin.');
       }
     } else {
       const successLogin = await login(username, password);
       if (successLogin) {
-        navigate('/admin');
+        navigate('/');
       } else {
         setError('Login yoki parol noto\'g\'ri!');
       }
@@ -94,6 +109,56 @@ export default function Login() {
               />
             </div>
           </div>
+
+          {isRegistering && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Ism</label>
+                <input
+                  type="text"
+                  required
+                  className="block w-full px-3 py-3 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+                  placeholder="Ismingiz"
+                  value={firstname}
+                  onChange={(e) => setFirstname(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Familiya</label>
+                <input
+                  type="text"
+                  required
+                  className="block w-full px-3 py-3 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+                  placeholder="Familiyangiz"
+                  value={lastname}
+                  onChange={(e) => setLastname(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Yosh</label>
+                <input
+                  type="number"
+                  required
+                  className="block w-full px-3 py-3 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+                  placeholder="25"
+                  value={age}
+                  onChange={(e) => setAge(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Jinsi</label>
+                <select
+                  required
+                  className="block w-full px-3 py-3 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+                  value={gender}
+                  onChange={(e) => setGender(e.target.value)}
+                >
+                  <option value="erkak">Erkak</option>
+                  <option value="ayol">Ayol</option>
+                </select>
+              </div>
+            </div>
+          )}
 
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Parol</label>

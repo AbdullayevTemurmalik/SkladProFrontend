@@ -35,6 +35,11 @@ export default function Admin() {
   const [users, setUsers] = useState([]);
   const [showUsersModal, setShowUsersModal] = useState(false);
   const [revealedPasswords, setRevealedPasswords] = useState({});
+  const [isAdminUnlocked, setIsAdminUnlocked] = useState(false);
+  const [adminCodeInput, setAdminCodeInput] = useState("");
+  
+  const [passwordPromptUserId, setPasswordPromptUserId] = useState(null);
+  const [secretPasswordInput, setSecretPasswordInput] = useState("");
 
   // Modallar uchun
   const [deleteId, setDeleteId] = useState(null);
@@ -410,6 +415,47 @@ export default function Admin() {
     "w-full px-3 py-1.5 bg-blue-950/60 border border-blue-800/50 rounded-lg text-white focus:ring-2 focus:ring-blue-400 focus:bg-blue-900/80 text-sm font-medium placeholder-blue-200/40 transition-all shadow-inner outline-none";
   const labelStyle =
     "block text-[10px] font-bold text-blue-300 uppercase tracking-wider mb-1 flex items-center";
+
+  if (!isAdminUnlocked) {
+    return (
+      <div className="min-h-screen bg-[#0b1736] flex flex-col items-center justify-center p-4 relative overflow-hidden font-sans">
+        <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
+          <div className="absolute -top-40 -right-40 w-96 h-96 bg-blue-600 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
+          <div className="absolute top-40 -left-20 w-72 h-72 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
+        </div>
+        <div className="z-10 bg-blue-900/30 backdrop-blur-xl border border-blue-800/50 p-8 rounded-[2rem] shadow-2xl max-w-sm w-full text-center">
+          <div className="w-20 h-20 bg-blue-500/20 text-blue-400 rounded-full flex items-center justify-center mx-auto mb-6">
+            <LayoutDashboard className="w-10 h-10" />
+          </div>
+          <h2 className="text-2xl font-black text-white mb-2">Admin Panel</h2>
+          <p className="text-blue-300 mb-8 text-sm font-bold">Maxfiy kodni kiriting</p>
+          <input
+            type="password"
+            value={adminCodeInput}
+            onChange={(e) => setAdminCodeInput(e.target.value)}
+            className="w-full text-center text-2xl tracking-[0.5em] px-4 py-4 bg-blue-950/60 border border-blue-800/50 rounded-xl text-white focus:ring-2 focus:ring-blue-400 outline-none mb-6"
+            placeholder="•••••"
+          />
+          <button
+            onClick={() => {
+              if (adminCodeInput === "12345") {
+                setIsAdminUnlocked(true);
+              } else {
+                setErrorModal("Admin kodi noto'g'ri!");
+                setAdminCodeInput("");
+              }
+            }}
+            className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg active:scale-95"
+          >
+            Kirish
+          </button>
+          <button onClick={() => navigate('/')} className="mt-4 text-blue-400 hover:text-white text-sm font-bold">
+            Orqaga qaytish
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#0b1736] flex flex-col font-sans pb-20 relative overflow-hidden">
@@ -1094,12 +1140,8 @@ export default function Admin() {
                         if (revealedPasswords[u.id]) {
                           setRevealedPasswords({ ...revealedPasswords, [u.id]: false });
                         } else {
-                          const pass = prompt("Maxfiy parolni kiriting:");
-                          if (pass === "123456") {
-                            setRevealedPasswords({ ...revealedPasswords, [u.id]: true });
-                          } else if (pass) {
-                            alert("Xato parol!");
-                          }
+                          setPasswordPromptUserId(u.id);
+                          setSecretPasswordInput("");
                         }
                       }}
                       className="text-blue-400 hover:text-indigo-400 transition"
@@ -1111,6 +1153,43 @@ export default function Admin() {
               ))}
               {users.length === 0 && <div className="text-center text-blue-300 py-4">Foydalanuvchilar topilmadi</div>}
             </div>
+            
+            {passwordPromptUserId && (
+              <div className="absolute inset-0 bg-[#0b1736]/90 backdrop-blur-sm z-10 flex flex-col items-center justify-center p-6 rounded-3xl animate-in zoom-in-95 duration-200">
+                <h4 className="text-lg font-black text-white mb-2">Maxfiy Parol</h4>
+                <p className="text-sm text-blue-300 mb-6 text-center">Foydalanuvchi parolini ko'rish uchun ruxsat kodi kerak.</p>
+                <input
+                  type="password"
+                  value={secretPasswordInput}
+                  onChange={(e) => setSecretPasswordInput(e.target.value)}
+                  placeholder="••••••"
+                  className="w-full text-center tracking-widest px-4 py-3 bg-blue-950 border border-blue-800 rounded-xl text-white focus:ring-2 focus:ring-blue-500 mb-4 outline-none"
+                />
+                <div className="flex gap-3 w-full">
+                  <button
+                    onClick={() => setPasswordPromptUserId(null)}
+                    className="flex-1 bg-blue-900/50 hover:bg-blue-800 text-blue-300 font-bold py-2.5 rounded-xl transition-all"
+                  >
+                    Bekor qilish
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (secretPasswordInput === "123456") {
+                        setRevealedPasswords({ ...revealedPasswords, [passwordPromptUserId]: true });
+                        setPasswordPromptUserId(null);
+                      } else {
+                        setErrorModal("Xato parol!");
+                        setSecretPasswordInput("");
+                      }
+                    }}
+                    className="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-xl transition-all"
+                  >
+                    Tasdiqlash
+                  </button>
+                </div>
+              </div>
+            )}
+            
           </div>
         </div>
       )}
