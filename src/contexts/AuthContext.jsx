@@ -6,16 +6,15 @@ const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    return localStorage.getItem('isAdmin') === 'true' && !!localStorage.getItem('token');
+    return localStorage.getItem('isAdmin') === 'true';
   });
 
   const login = async (username, password) => {
     try {
       const res = await api.post('/users/login', { username, password });
-      if (res.data && res.data.token) {
+      if (res.data) {
         setIsAuthenticated(true);
         localStorage.setItem('isAdmin', 'true');
-        localStorage.setItem('token', res.data.token);
         return true;
       }
       return false;
@@ -41,7 +40,6 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     setIsAuthenticated(false);
     localStorage.removeItem('isAdmin');
-    localStorage.removeItem('token');
   };
 
   return (

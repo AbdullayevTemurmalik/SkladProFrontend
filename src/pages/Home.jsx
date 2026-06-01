@@ -142,16 +142,22 @@ export default function Home() {
     setLoading(true);
     setHasSearched(true);
     try {
-      let query = '';
-      if (selectedRegion) query += `regionId=${selectedRegion}&`;
-      if (selectedWarehouse) query += `warehouseId=${selectedWarehouse}&`;
-      if (searchName) query += `name=${searchName}&`;
-      // Note: Backendda category filter yozilmagan bo'lsa frontendda filter qilamiz
+      let finalData = [...allProductsCountData];
+
+      if (selectedRegion) {
+        // Find warehouses for this region
+        const validWarehouseIds = allWarehouses.filter(w => w.regionId.toString() === selectedRegion.toString()).map(w => w.id.toString());
+        finalData = finalData.filter(p => validWarehouseIds.includes(p.warehouseId.toString()));
+      }
       
-      const res = await api.get(`/products/search?${query}`);
-      let finalData = res.data;
+      if (selectedWarehouse) {
+        finalData = finalData.filter(p => p.warehouseId.toString() === selectedWarehouse.toString());
+      }
       
-      // Frontend Kategoriya filtri (orqada categoryId bo'lsa uni filter qilamiz)
+      if (searchName) {
+        finalData = finalData.filter(p => p.name.toLowerCase().includes(searchName.toLowerCase()));
+      }
+      
       if (selectedCategory) {
         finalData = finalData.filter(p => p.categoryId.toString() === selectedCategory.toString());
       }
