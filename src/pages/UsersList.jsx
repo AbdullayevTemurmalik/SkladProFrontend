@@ -55,11 +55,15 @@ export default function UsersList() {
   const handleEditSubmit = async (e) => {
     e.preventDefault();
     try {
-      await api.put(`/users/${editUser.id}`, {
+      const payload = {
         username: editUser.username,
-        role: editUser.role,
-        password: editUser.password // Allows changing password
-      });
+        role: editUser.role
+      };
+      if (editUser.password && editUser.password.trim() !== '') {
+        payload.password = editUser.password;
+      }
+      
+      await api.put(`/users/${editUser.id}`, payload);
       showToast("Foydalanuvchi yangilandi", "success");
       setEditUser(null);
       fetchUsers();
@@ -237,12 +241,12 @@ export default function UsersList() {
               <div>
                 <label className="block text-[10px] font-bold text-blue-300 uppercase mb-1">Roli (Role)</label>
                 <select
-                  value={editUser.role || 'USER'}
+                  value={editUser.role || 'user'}
                   onChange={(e) => setEditUser({...editUser, role: e.target.value})}
                   className={inputStyle}
                 >
-                  <option value="USER">USER</option>
-                  <option value="ADMIN">ADMIN</option>
+                  <option value="user">USER</option>
+                  <option value="admin">ADMIN</option>
                 </select>
               </div>
               <button type="submit" className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl transition-all flex justify-center items-center mt-4">
