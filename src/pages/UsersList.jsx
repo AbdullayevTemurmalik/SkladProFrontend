@@ -5,7 +5,7 @@ import Navbar from "../components/Navbar";
 import ConfirmModal from "../components/ConfirmModal";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../contexts/ToastContext";
-import { Users, Eye, EyeOff, X, ArrowLeft, Trash2, Edit, Save } from "lucide-react";
+import { Users, Eye, EyeOff, X, ArrowLeft, Trash2, Edit, Save, Search } from "lucide-react";
 
 export default function UsersList() {
   const { isAuthenticated, isAdmin } = useAuth();
@@ -13,6 +13,7 @@ export default function UsersList() {
   const { showToast } = useToast();
 
   const [users, setUsers] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const [revealedPasswords, setRevealedPasswords] = useState({});
   const [passwordPromptUserId, setPasswordPromptUserId] = useState(null);
   const [secretPasswordInput, setSecretPasswordInput] = useState("");
@@ -77,7 +78,7 @@ export default function UsersList() {
       <Navbar />
       
       <div className="max-w-4xl mx-auto px-4 w-full pt-8 relative z-10">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
           <div>
             <button 
               onClick={() => navigate('/admin')}
@@ -87,14 +88,27 @@ export default function UsersList() {
             </button>
             <h1 className="text-3xl font-black text-white flex items-center">
               <Users className="w-8 h-8 mr-3 text-blue-500" /> 
-              Tizimdagi Foydalanuvchilar
+              Foydalanuvchilar
             </h1>
+          </div>
+          
+          <div className="relative w-full sm:w-72">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search className="h-5 w-5 text-blue-400" />
+            </div>
+            <input
+              type="text"
+              placeholder="Qidirish..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 bg-blue-900/40 border border-blue-700/50 rounded-xl text-white placeholder-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-inner"
+            />
           </div>
         </div>
 
         <div className="bg-blue-900/20 backdrop-blur-md rounded-3xl shadow-2xl border border-blue-500/20 p-6">
           <div className="space-y-4">
-            {users.map((u) => (
+            {users.filter(u => u.username.toLowerCase().includes(searchTerm.toLowerCase())).map((u) => (
               <div key={u.id} className="bg-blue-950/50 p-5 rounded-2xl border border-blue-800/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition hover:bg-blue-900/40">
                 <div className="flex items-center">
                   <div className="w-12 h-12 bg-indigo-500/20 text-indigo-400 rounded-full flex items-center justify-center text-xl font-black mr-4 shadow-inner">
@@ -141,7 +155,11 @@ export default function UsersList() {
                 </div>
               </div>
             ))}
-            {users.length === 0 && <div className="text-center text-blue-300 py-8 font-bold">Foydalanuvchilar topilmadi</div>}
+            {users.filter(u => u.username.toLowerCase().includes(searchTerm.toLowerCase())).length === 0 && (
+              <div className="text-center text-blue-300 py-8 font-bold">
+                {searchTerm ? "Kiritilgan so'rov bo'yicha foydalanuvchi topilmadi" : "Foydalanuvchilar topilmadi"}
+              </div>
+            )}
           </div>
         </div>
       </div>
