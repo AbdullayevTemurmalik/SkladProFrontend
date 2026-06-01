@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Eye, EyeOff, Lock, User, ArrowLeft, UserPlus } from 'lucide-react';
 
 export default function Login() {
-  const [isRegistering, setIsRegistering] = useState(false);
+  const [isRegistering, setIsRegistering] = useState(true);
   const [username, setUsername] = useState('');
   const [firstname, setFirstname] = useState('');
   const [lastname, setLastname] = useState('');
@@ -37,14 +37,19 @@ export default function Login() {
         gender 
       });
       if (successReg) {
-        setSuccess('Muvaffaqiyatli ro\'yxatdan o\'tdingiz! Endi tizimga kiring.');
-        setIsRegistering(false);
-        setPassword('');
-        setConfirmPassword('');
-        setFirstname('');
-        setLastname('');
-        setAge('');
-        setGender('erkak');
+        const successLogin = await login(username, password);
+        if (successLogin) {
+          navigate('/');
+        } else {
+          setSuccess('Muvaffaqiyatli ro\'yxatdan o\'tdingiz! Endi tizimga kiring.');
+          setIsRegistering(false);
+          setPassword('');
+          setConfirmPassword('');
+          setFirstname('');
+          setLastname('');
+          setAge('');
+          setGender('erkak');
+        }
       } else {
         setError('Ro\'yxatdan o\'tishda xatolik yuz berdi! Username band bo\'lishi mumkin.');
       }
@@ -61,19 +66,14 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
       <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 border border-slate-100 transition-all duration-300">
-        <button 
-          onClick={() => navigate('/')}
-          className="flex items-center text-slate-500 hover:text-indigo-600 transition mb-6"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" /> Bosh sahifaga
-        </button>
+
         
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4 transition-all">
             {isRegistering ? <UserPlus className="w-8 h-8" /> : <Lock className="w-8 h-8" />}
           </div>
           <h2 className="text-2xl font-bold text-slate-800">
-            {isRegistering ? "Ro'yxatdan O'tish" : "Admin Panelga Kirish"}
+            {isRegistering ? "Ro'yxatdan O'tish" : "Tizimga Kirish"}
           </h2>
           <p className="text-slate-500 mt-2">
             {isRegistering ? "Yangi akkaunt yarating" : "Boshqaruv tizimiga xush kelibsiz"}

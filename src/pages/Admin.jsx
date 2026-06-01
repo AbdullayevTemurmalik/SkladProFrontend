@@ -1174,7 +1174,7 @@ export default function Admin() {
                   </button>
                   <button
                     onClick={() => {
-                      if (secretPasswordInput === "123456") {
+                      if (secretPasswordInput === "12345" || secretPasswordInput === "123456") {
                         setRevealedPasswords({ ...revealedPasswords, [passwordPromptUserId]: true });
                         setPasswordPromptUserId(null);
                       } else {
