@@ -1,28 +1,45 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Eye, EyeOff, Lock, User, ArrowLeft } from 'lucide-react';
+import { Eye, EyeOff, Lock, User, ArrowLeft, UserPlus } from 'lucide-react';
 
 export default function Login() {
+  const [isRegistering, setIsRegistering] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, register } = useAuth();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (login(username, password)) {
-      navigate('/admin');
+    setError('');
+    setSuccess('');
+    
+    if (isRegistering) {
+      const successReg = await register(username, password);
+      if (successReg) {
+        setSuccess('Muvaffaqiyatli ro\'yxatdan o\'tdingiz! Endi tizimga kiring.');
+        setIsRegistering(false);
+        setPassword('');
+      } else {
+        setError('Ro\'yxatdan o\'tishda xatolik yuz berdi! Username band bo\'lishi mumkin.');
+      }
     } else {
-      setError('Login yoki parol noto\'g\'ri!');
+      const successLogin = await login(username, password);
+      if (successLogin) {
+        navigate('/admin');
+      } else {
+        setError('Login yoki parol noto\'g\'ri!');
+      }
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
-      <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 border border-slate-100">
+      <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 border border-slate-100 transition-all duration-300">
         <button 
           onClick={() => navigate('/')}
           className="flex items-center text-slate-500 hover:text-indigo-600 transition mb-6"
@@ -31,16 +48,26 @@ export default function Login() {
         </button>
         
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Lock className="w-8 h-8" />
+          <div className="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4 transition-all">
+            {isRegistering ? <UserPlus className="w-8 h-8" /> : <Lock className="w-8 h-8" />}
           </div>
-          <h2 className="text-2xl font-bold text-slate-800">Admin Panelga Kirish</h2>
-          <p className="text-slate-500 mt-2">Boshqaruv tizimiga xush kelibsiz</p>
+          <h2 className="text-2xl font-bold text-slate-800">
+            {isRegistering ? "Ro'yxatdan O'tish" : "Admin Panelga Kirish"}
+          </h2>
+          <p className="text-slate-500 mt-2">
+            {isRegistering ? "Yangi akkaunt yarating" : "Boshqaruv tizimiga xush kelibsiz"}
+          </p>
         </div>
 
         {error && (
-          <div className="bg-red-50 text-red-600 p-4 rounded-xl text-sm mb-6 text-center border border-red-100">
+          <div className="bg-red-50 text-red-600 p-4 rounded-xl text-sm mb-6 text-center border border-red-100 animate-pulse">
             {error}
+          </div>
+        )}
+        
+        {success && (
+          <div className="bg-green-50 text-green-600 p-4 rounded-xl text-sm mb-6 text-center border border-green-100">
+            {success}
           </div>
         )}
 
@@ -55,7 +82,7 @@ export default function Login() {
                 type="text"
                 required
                 className="block w-full pl-10 pr-3 py-3 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
-                placeholder="admin"
+                placeholder={isRegistering ? "Yangi username" : "admin"}
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
               />
@@ -94,9 +121,23 @@ export default function Login() {
             type="submit"
             className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors mt-2"
           >
-            Kirish
+            {isRegistering ? "Ro'yxatdan O'tish" : "Kirish"}
           </button>
         </form>
+        
+        <div className="mt-6 text-center">
+          <button 
+            type="button"
+            onClick={() => {
+              setIsRegistering(!isRegistering);
+              setError('');
+              setSuccess('');
+            }} 
+            className="text-sm text-indigo-600 hover:text-indigo-800 transition font-medium"
+          >
+            {isRegistering ? "Akkauntingiz bormi? Tizimga kiring" : "Akkauntingiz yo'qmi? Ro'yxatdan o'ting"}
+          </button>
+        </div>
       </div>
     </div>
   );

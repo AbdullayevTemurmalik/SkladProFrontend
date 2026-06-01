@@ -1,28 +1,51 @@
 import { createContext, useState, useContext } from 'react';
 
+import api from '../services/api';
+
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    return localStorage.getItem('isAdmin') === 'true';
+    return localStorage.getItem('isAdmin') === 'true' && !!localStorage.getItem('token');
   });
 
-  const login = (username, password) => {
-    if (username === 'admin' && password === '12345') {
-      setIsAuthenticated(true);
-      localStorage.setItem('isAdmin', 'true');
-      return true;
+  const login = async (username, password) => {
+    try {
+      const res = await api.post('/users/login', { username, password });
+      if (res.data && res.data.token) {
+        setIsAuthenticated(true);
+        localStorage.setItem('isAdmin', 'true');
+        localStorage.setItem('token', res.data.token);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("Login xatosi:", error);
+      return false;
     }
-    return false;
+  };
+
+  const register = async (username, password) => {
+    try {
+      const res = await api.post('/users', { username, password });
+      if (res.data) {
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("Register xatosi:", error);
+      return false;
+    }
   };
 
   const logout = () => {
     setIsAuthenticated(false);
     localStorage.removeItem('isAdmin');
+    localStorage.removeItem('token');
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );
