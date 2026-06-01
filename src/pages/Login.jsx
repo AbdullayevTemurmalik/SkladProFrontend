@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Eye, EyeOff, Lock, User, ArrowLeft, UserPlus } from 'lucide-react';
 
 export default function Login() {
-  const [isRegistering, setIsRegistering] = useState(true);
+  const [isRegistering, setIsRegistering] = useState(false);
   const [username, setUsername] = useState('');
   const [firstname, setFirstname] = useState('');
   const [lastname, setLastname] = useState('');
