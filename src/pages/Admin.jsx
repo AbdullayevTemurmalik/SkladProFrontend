@@ -41,6 +41,10 @@ export default function Admin() {
   // Viloyat va Ombor filtratsiyasi uchun
   const [formRegion, setFormRegion] = useState("");
   const [editRegion, setEditRegion] = useState("");
+
+  const [isAdminUnlocked, setIsAdminUnlocked] = useState(false);
+  const [adminCodeInput, setAdminCodeInput] = useState("");
+
   // Oflayn sinxronizatsiya uchun
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [offlineQueue, setOfflineQueue] = useState(() =>
@@ -406,6 +410,61 @@ export default function Admin() {
     "w-full px-3 py-1.5 bg-blue-950/60 border border-blue-800/50 rounded-lg text-white focus:ring-2 focus:ring-blue-400 focus:bg-blue-900/80 text-sm font-medium placeholder-blue-200/40 transition-all shadow-inner outline-none";
   const labelStyle =
     "block text-[10px] font-bold text-blue-300 uppercase tracking-wider mb-1 flex items-center";
+
+  if (!isAdminUnlocked) {
+    return (
+      <div className="min-h-screen bg-[#0b1736] flex flex-col items-center justify-center p-4 relative overflow-hidden font-sans">
+        <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
+          <div className="absolute -top-40 -right-40 w-96 h-96 bg-blue-600 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
+          <div className="absolute top-40 -left-20 w-72 h-72 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
+        </div>
+        <div className="z-10 bg-blue-900/30 backdrop-blur-xl border border-blue-800/50 p-8 rounded-[2rem] shadow-2xl max-w-sm w-full text-center">
+          <div className="w-20 h-20 bg-blue-500/20 text-blue-400 rounded-full flex items-center justify-center mx-auto mb-6">
+            <LayoutDashboard className="w-10 h-10" />
+          </div>
+          <h2 className="text-2xl font-black text-white mb-2">Admin Panel</h2>
+          <p className="text-blue-300 mb-8 text-sm font-bold">Maxfiy kodni kiriting</p>
+          <input
+            type="password"
+            value={adminCodeInput}
+            onChange={(e) => setAdminCodeInput(e.target.value)}
+            className="w-full text-center text-xl tracking-widest px-4 py-4 bg-blue-950/60 border border-blue-800/50 rounded-xl text-white focus:ring-2 focus:ring-blue-400 outline-none mb-6"
+            placeholder="Kodni kiriting..."
+          />
+          <button
+            onClick={() => {
+              if (adminCodeInput.toLowerCase().replace(/\s/g, '') === "admin12345" || adminCodeInput === "12345") {
+                setIsAdminUnlocked(true);
+              } else {
+                setErrorModal("Admin kodi noto'g'ri!");
+                setAdminCodeInput("");
+              }
+            }}
+            className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg active:scale-95"
+          >
+            Kirish
+          </button>
+          <button onClick={() => navigate('/')} className="mt-4 text-blue-400 hover:text-white text-sm font-bold">
+            Orqaga qaytish
+          </button>
+        </div>
+        {errorModal && (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-[#0b1736]/80 backdrop-blur-md">
+            <div className="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-6 text-center border border-red-100">
+              <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <X className="w-8 h-8" />
+              </div>
+              <h3 className="text-xl font-black text-[#0b1736] mb-2">Xatolik!</h3>
+              <p className="text-sm font-bold text-slate-500 mb-6">{errorModal}</p>
+              <button onClick={() => setErrorModal(null)} className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-xl transition-all">
+                Tushunarli
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#0b1736] flex flex-col font-sans pb-20 relative overflow-hidden">

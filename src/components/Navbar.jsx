@@ -41,11 +41,9 @@ export default function Navbar() {
             <div className="flex items-center space-x-4">
               {isAuthenticated ? (
                 <>
-                  {isAdmin && (
-                    <Link to="/admin" className="flex items-center text-sm font-bold text-blue-100 hover:text-white transition-colors bg-blue-900/50 hover:bg-blue-800 px-4 py-2.5 rounded-xl border border-blue-800/50 hidden sm:flex">
-                      <ShieldCheck className="w-4 h-4 mr-2" /> Boshqaruv Panel
-                    </Link>
-                  )}
+                  <Link to="/admin" className="flex items-center text-sm font-bold text-blue-100 hover:text-white transition-colors bg-blue-900/50 hover:bg-blue-800 px-4 py-2.5 rounded-xl border border-blue-800/50 hidden sm:flex">
+                    <ShieldCheck className="w-4 h-4 mr-2" /> Boshqaruv Panel
+                  </Link>
                   <button 
                     onClick={() => setShowLogoutModal(true)}
                     className="flex items-center text-sm font-bold text-red-400 hover:text-red-300 bg-red-950/30 hover:bg-red-900/40 px-4 py-2.5 rounded-xl transition-colors border border-red-900/30"

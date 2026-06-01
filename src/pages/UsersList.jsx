@@ -8,7 +8,7 @@ import { useToast } from "../contexts/ToastContext";
 import { Users, Eye, EyeOff, X, ArrowLeft, Trash2, Edit, Save, Search } from "lucide-react";
 
 export default function UsersList() {
-  const { isAuthenticated, isAdmin } = useAuth();
+  const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const { showToast } = useToast();
 
@@ -23,12 +23,12 @@ export default function UsersList() {
   const [errorModal, setErrorModal] = useState(null);
 
   useEffect(() => {
-    if (!isAuthenticated || !isAdmin) {
+    if (!isAuthenticated) {
       navigate('/');
       return;
     }
     fetchUsers();
-  }, [isAuthenticated, isAdmin, navigate]);
+  }, [isAuthenticated, navigate]);
 
   const fetchUsers = async () => {
     try {
@@ -75,7 +75,7 @@ export default function UsersList() {
   const inputStyle =
     "w-full px-3 py-2 bg-blue-950/60 border border-blue-800/50 rounded-lg text-white focus:ring-2 focus:ring-blue-400 focus:bg-blue-900/80 text-sm font-medium transition-all outline-none";
 
-  if (!isAuthenticated || !isAdmin) return null;
+  if (!isAuthenticated) return null;
 
   return (
     <div className="min-h-screen bg-[#0b1736] flex flex-col font-sans pb-20 relative overflow-hidden">
